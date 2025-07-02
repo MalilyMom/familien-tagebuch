@@ -1,10 +1,11 @@
-# Familien-Tagebuch
+# Familien Tagebuch
 
-🌿 Eine minimalistische, werbefreie Web-App zum Festhalten von Erlebnissen mit Kindern.
+🌿 Minimalistische, werbefreie App zum Dokumentieren von Kindheitserinnerungen.
 
-- Offline nutzbar
-- Daten lokal im Browser gespeichert
-- Export als TXT
-- Optionale Dropbox-Sicherung
+- Einträge offline speichern
+- Dropbox-Backup (JSON und Klartext)
+- Startseite mit Übersicht
+- neue Einträge über Floating Plus-Button
 
-**Bereitstellung über GitHub Pages empfohlen.**
+## Hosting
+Empfohlen mit GitHub Pages.

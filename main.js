@@ -1,87 +1,102 @@
-const CLIENT_ID = "HIER_DEIN_DROPBOX_APP_KEY";
-const REDIRECT_URI = window.location.origin;
-
+let view = "list";
+let editingDate = null;
 let accessToken = null;
-const entries = JSON.parse(localStorage.getItem("entries") || "{}");
 
-function formatDate(date) {
-  return date.toISOString().split("T")[0];
-}
+const entries = JSON.parse(localStorage.getItem("entries") || "{}");
+render();
 
 function render() {
-  document.getElementById("root").innerHTML = `
-    <h1>🌿 Mein Familien-Tagebuch</h1>
-    <div class="card">
-      <label>Datum:
-        <input type="date" id="date" value="${formatDate(new Date())}">
-      </label>
-      <label>Titel:
-        <input type="text" id="title">
-      </label>
-      <label>Eintrag:
-        <textarea id="text"></textarea>
-      </label>
-      <div style="margin-top:10px;">
-        <button onclick="saveEntry()">💾 Speichern</button>
-        <button onclick="exportEntries()">📄 Exportieren</button>
-        <button onclick="uploadDropbox()">☁️ In Dropbox sichern</button>
+  const app = document.getElementById("app");
+  if (view === "list") {
+    app.innerHTML = `
+      <h1>Familien Tagebuch</h1>
+      <div class="entry-list">
+        ${Object.keys(entries)
+          .sort()
+          .reverse()
+          .map(date => {
+            const {title, text} = entries[date];
+            const preview = text.split('\\n').slice(0,2).join(' ');
+            return `
+              <div class="card">
+                <div class="entry-date">${formatDate(date)}</div>
+                <div class="entry-title">${title}</div>
+                <div class="entry-preview">${preview}</div>
+              </div>
+            `;
+          }).join('')}
       </div>
-    </div>
-    <div id="entries" style="margin-top:20px;"></div>
-  `;
-  listEntries();
+      <button style="position:fixed; bottom:90px; left:50%; transform:translateX(-50%);" onclick="backupDropbox()">☁️ Dropbox sichern</button>
+      <button class="fab" onclick="newEntry()">+</button>
+    `;
+  } else if (view === "add") {
+    const today = editingDate || new Date().toISOString().split('T')[0];
+    app.innerHTML = `
+      <h2>Neuer Eintrag</h2>
+      <div class="card">
+        <label>Datum:<br><input type="date" id="date" value="${today}"></label>
+        <br>
+        <label>Titel:<br><input type="text" id="title" maxlength="100"></label>
+        <br>
+        <label>Eintrag:<br><textarea id="text"></textarea></label>
+        <br>
+        <button onclick="saveEntry()">SPEICHERN</button>
+        <button class="cancel" onclick="cancelEntry()">ABBRECHEN</button>
+      </div>
+    `;
+  }
+}
+
+function formatDate(iso) {
+  const options = { day: '2-digit', month: 'long', year: 'numeric' };
+  return new Date(iso).toLocaleDateString('de-DE', options).toUpperCase();
+}
+
+function newEntry() {
+  view = "add";
+  editingDate = null;
+  render();
 }
 
 function saveEntry() {
   const date = document.getElementById("date").value;
   const title = document.getElementById("title").value;
   const text = document.getElementById("text").value;
-  entries[date] = { title, text };
+  entries[date] = {title, text};
   localStorage.setItem("entries", JSON.stringify(entries));
-  alert("Gespeichert!");
+  view = "list";
   render();
 }
 
-function listEntries() {
-  const container = document.getElementById("entries");
-  container.innerHTML = "";
-  Object.keys(entries)
-    .sort()
-    .reverse()
-    .forEach(date => {
-      const { title, text } = entries[date];
-      container.innerHTML += `
-        <div class="card">
-          <strong>${date} – ${title}</strong>
-          <p style="white-space: pre-wrap;">${text}</p>
-        </div>
-      `;
-    });
+function cancelEntry() {
+  view = "list";
+  render();
 }
 
-function exportEntries() {
-  const text = Object.entries(entries).map(([date, {title, text}]) => 
-    `## ${date} - ${title}\n${text}\n`
-  ).join("\n");
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "tagebuch.txt";
-  link.click();
-}
-
-function uploadDropbox() {
+function backupDropbox() {
   if (!accessToken) {
-    window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}`;
+    const clientId = "HIER_DEIN_DROPBOX_APP_KEY";
+    const redirect = window.location.origin;
+    window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirect}`;
     return;
   }
-  const content = JSON.stringify(entries, null, 2);
+  // JSON Backup
+  const jsonContent = JSON.stringify(entries, null, 2);
+  uploadFile(jsonContent, "/tagebuch_backup.json");
+
+  // Klartext Backup
+  const textContent = Object.entries(entries).map(([date, {title, text}]) =>
+    `${formatDate(date)}\n${title}\n\n${text}\n\n---\n`).join('');
+  uploadFile(textContent, "/tagebuch_backup.txt");
+}
+
+function uploadFile(content, path) {
   fetch("https://content.dropboxapi.com/2/files/upload", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Dropbox-API-Arg": JSON.stringify({
-        path: "/tagebuch_backup.json",
+        path,
         mode: "overwrite"
       }),
       "Content-Type": "application/octet-stream"
@@ -89,13 +104,12 @@ function uploadDropbox() {
     body: content
   })
   .then(r => r.json())
-  .then(() => alert("Erfolgreich in Dropbox gespeichert!"))
+  .then(() => alert(`Erfolgreich in Dropbox gespeichert: ${path}`))
   .catch(err => alert("Fehler: "+err.message));
 }
 
 if (window.location.hash.includes("access_token")) {
   accessToken = new URLSearchParams(window.location.hash.substring(1)).get("access_token");
   window.location.hash = "";
+  render();
 }
-
-render();
