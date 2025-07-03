@@ -37,6 +37,10 @@ h1, h2 {
   margin-bottom: 6px;
 }
 
+.entry-preview {
+  white-space: pre-wrap;
+}
+
 .fab {
   position: fixed;
   bottom: 20px;
@@ -68,22 +72,33 @@ button.cancel {
   color: #a77e5f;
 }
 
+button.delete {
+  background-color: #a94a4a;
+  color: white;
+}
+button.delete:hover {
+  background-color: #872b2b;
+}
+
 button:hover {
   opacity: 0.9;
 }
 
-textarea {
+textarea, input[type=text] {
+  font-family: 'Montserrat', sans-serif;
   width: 100%;
   border-radius: 10px;
   border: 1px solid #ccc;
-  padding: 8px;
-  min-height: 120px;
-  resize: vertical;
+  padding: 12px;
 }
 
-input[type=text] {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  padding: 8px;
+textarea {
+  min-height: 300px;
+  height: 60vh;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
 }
