@@ -38,7 +38,6 @@ h1, h2 {
 }
 
 .entry-preview {
-  white-space: pre-wrap;
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
