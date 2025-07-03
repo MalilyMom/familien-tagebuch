@@ -76,7 +76,7 @@ function cancelEntry() {
 function backupDropbox() {
   if (!accessToken) {
     const clientId = "av2fxabt2oi4u1m";
-    const redirect = window.location.origin;
+    const redirect = const redirect = window.location.origin + "/familien-tagebuch/";
     window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirect}`;
     return;
   }
