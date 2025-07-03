@@ -75,7 +75,7 @@ function cancelEntry() {
 
 function backupDropbox() {
   if (!accessToken) {
-    const clientId = "HIER_DEIN_DROPBOX_APP_KEY";
+    const clientId = "av2fxabt2oi4u1m";
     const redirect = window.location.origin;
     window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirect}`;
     return;
