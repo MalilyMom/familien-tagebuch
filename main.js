@@ -41,9 +41,13 @@ function render() {
       <div class="card">
         <label>Datum:<br><input type="date" id="date" value="${today}"></label>
         <br>
-        <label>Titel:<br><input type="text" id="title" maxlength="100" value="${existingTitle}"></label>
-        <br>
-        <label>Eintrag:<br><textarea id="text">${existingText}</textarea></label>
+        <label>Titel:<br>
+  <input type="text" class="input-field" id="title" maxlength="100" value="${existingTitle}">
+</label>
+<br>
+<label>Eintrag:<br>
+  <textarea class="input-field" id="text">${existingText}</textarea>
+</label>
         <br>
         <div class="button-group">
           <button onclick="saveEntry()">SPEICHERN</button>
