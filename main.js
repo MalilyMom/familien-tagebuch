@@ -19,9 +19,9 @@ function render() {
           .reverse()
           .map(date => {
             const {title, text} = entries[date];
-            const preview = text.split('\\n').slice(0,2).join(' ');
+            const preview = text.split('\\n').slice(0,5).join(' ');
             return `
-              <div class="card">
+              <div class="card" onclick="editEntry('${date}')">
                 <div class="entry-date">${formatDate(date)}</div>
                 <div class="entry-title">${title}</div>
                 <div class="entry-preview">${preview}</div>
@@ -29,22 +29,27 @@ function render() {
             `;
           }).join('')}
       </div>
-      <button style="position:fixed; bottom:90px; left:50%; transform:translateX(-50%);" onclick="backupDropbox()">☁️ Dropbox sichern</button>
+      <button style="position:fixed; bottom:90px; left:calc(50% - 50px); transform:translateX(-50%);" onclick="backupDropbox()">sichern</button>
       <button class="fab" onclick="newEntry()">+</button>
     `;
   } else if (view === "add") {
     const today = editingDate || new Date().toISOString().split('T')[0];
+    const existingTitle = editingDate ? entries[editingDate].title : "";
+    const existingText = editingDate ? entries[editingDate].text : "";
     app.innerHTML = `
-      <h2>Neuer Eintrag</h2>
+      <h2>${editingDate ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
       <div class="card">
         <label>Datum:<br><input type="date" id="date" value="${today}"></label>
         <br>
-        <label>Titel:<br><input type="text" id="title" maxlength="100"></label>
+        <label>Titel:<br><input type="text" id="title" maxlength="100" value="${existingTitle}"></label>
         <br>
-        <label>Eintrag:<br><textarea id="text"></textarea></label>
+        <label>Eintrag:<br><textarea id="text">${existingText}</textarea></label>
         <br>
-        <button onclick="saveEntry()">SPEICHERN</button>
-        <button class="cancel" onclick="cancelEntry()">ABBRECHEN</button>
+        <div class="button-group">
+          <button onclick="saveEntry()">SPEICHERN</button>
+          <button class="cancel" onclick="cancelEntry()">ABBRECHEN</button>
+          ${editingDate ? '<button class="delete" onclick="deleteEntry()">LÖSCHEN</button>' : ''}
+        </div>
       </div>
     `;
   }
@@ -58,6 +63,12 @@ function formatDate(iso) {
 function newEntry() {
   view = "add";
   editingDate = null;
+  render();
+}
+
+function editEntry(date) {
+  editingDate = date;
+  view = "add";
   render();
 }
 
@@ -76,16 +87,22 @@ function cancelEntry() {
   render();
 }
 
+function deleteEntry() {
+  if (editingDate && confirm("Eintrag wirklich löschen?")) {
+    delete entries[editingDate];
+    localStorage.setItem("entries", JSON.stringify(entries));
+    view = "list";
+    render();
+  }
+}
+
 function backupDropbox() {
   if (!accessToken) {
     window.location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirect}`;
     return;
   }
-  // JSON Backup
   const jsonContent = JSON.stringify(entries, null, 2);
   uploadFile(jsonContent, "/tagebuch_backup.json");
-
-  // Klartext Backup
   const textContent = Object.entries(entries).map(([date, {title, text}]) =>
     `${formatDate(date)}\n${title}\n\n${text}\n\n---\n`).join('');
   uploadFile(textContent, "/tagebuch_backup.txt");
@@ -105,7 +122,7 @@ function uploadFile(content, path) {
     body: content
   })
   .then(r => r.json())
-  .then(() => alert(`Erfolgreich in Dropbox gespeichert: ${path}`))
+  .then(() => alert(`Erfolgreich gesichert: ${path}`))
   .catch(err => alert("Fehler: "+err.message));
 }
 
