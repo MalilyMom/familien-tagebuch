@@ -39,6 +39,10 @@ h1, h2 {
 
 .entry-preview {
   white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .fab {
@@ -93,8 +97,8 @@ textarea, input[type=text] {
 }
 
 textarea {
-  min-height: 300px;
-  height: 60vh;
+  min-height: 250px;
+  height: 50vh;
 }
 
 .button-group {
